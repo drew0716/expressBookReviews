@@ -1,5 +1,6 @@
 const express = require('express');
-let books = require("./booksdb.js");
+const axios = require('axios');
+//let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
@@ -23,14 +24,26 @@ public_users.post("/register", (req,res) => {
   return res.status(404).json({message: "Unable to register user."});
 });
 
+// Create api to get book data
+public_users.get('/api/books', (req, res) => {
+    const books = require('./booksdb.js');
+    res.json(books);
+});
+
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-  //Send the books list as a response
-  return res.status(200).json(JSON.stringify({books}, null, 4));
+public_users.get('/', async function (req, res) {
+    try {
+        //Get book data asynchronously using axios
+        const response = await axios.get('http://localhost:5000/api/books');
+        return res.status(200).json(response.data);
+    } catch (error) {
+        //Return error if unable to get books data
+        return res.status(500).json({ message: `Error fetching books: ${error}` });
+    }
 });
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
+public_users.get('/isbn/:isbn', function (req, res) {
   //Retrieve the ISBN from the route parameter
   const isbn = req.params.isbn;
   //Check if the book exists in the books database
