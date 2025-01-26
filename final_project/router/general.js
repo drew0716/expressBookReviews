@@ -85,17 +85,25 @@ public_users.get('/author/:author', async function (req, res) {
 });
 
 // Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-  //Retrieve the title from the route parameter
-  const title = req.params.title;
-  //Filter the books array to find matching titles based on parameter
-  let filtered_books = Object.values(books).filter((book) => book.title.toLowerCase() === title.toLowerCase());
-  //Check if any books with title exist in the books database
-  if (filtered_books.length > 0) {
-    return res.status(200).json(JSON.stringify({filtered_books}, null, 4));
-  } else {
-    return res.status(404).json({ message: "No books found for this title" });
-  }
+public_users.get('/title/:title', async function (req, res) {
+    try {
+        //Retrieve the title from the route parameter
+        const title = req.params.title;
+        //Get book data asynchronously using axios
+        const response = await axios.get('http://localhost:5000/api/books');
+        const books = response.data;
+        //Filter the books array to find matching titles based on parameter
+        let filtered_books = Object.values(books).filter((book) => book.title.toLowerCase() === title.toLowerCase());
+        //Check if any books with title exist in the books database
+        if (filtered_books.length > 0) {
+            return res.status(200).json(filtered_books);
+        } else {
+            return res.status(404).json({ message: "No books found for this title" });
+        }
+    } catch (error) {
+        //Return error if unable to get books data
+        return res.status(500).json({ message: `Error fetching books: ${error}` });
+    }
 });
 
 //  Get book review
